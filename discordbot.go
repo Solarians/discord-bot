@@ -59,7 +59,13 @@ func registerCommands(r *dgc.Router) {
 					log.Fatalf("solarian: %v", err)
 				}
 			} else if len(solarian) > 1 {
-				err := ctx.RespondText(`https://solarians.click/render/` + solarian)
+				embed := &discordgo.MessageEmbed{
+					Type: discordgo.EmbedTypeGifv,
+					Image: &discordgo.MessageEmbedImage{
+						URL: "https://solarians.click/render/" + solarian + ".gif",
+					},
+				}
+				err := ctx.RespondTextEmbed("Here is solarian mint: "+solarian, embed)
 				if err != nil {
 					log.Fatalf("solarian: %v", err)
 				}
