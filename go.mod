@@ -5,4 +5,5 @@ go 1.16
 require (
 	github.com/bwmarrin/discordgo v0.23.2
 	github.com/lus/dgc v1.1.0
+	github.com/shopspring/decimal v1.2.0 // indirect
 )

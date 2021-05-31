@@ -1,16 +1,21 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"regexp"
+	"strings"
 	"syscall"
 
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/lus/dgc"
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -61,24 +66,185 @@ func registerCommands(r *dgc.Router) {
 		IgnoreCase:  true,
 		Handler: func(ctx *dgc.Ctx) {
 			solarian := ctx.Arguments.Get(0).Raw()
-			if rMintNumber.MatchString(solarian) { //match by mint number
-				err := ctx.RespondText("You requested solarian " + solarian)
+			if rMintNumber.MatchString(solarian) || rMintHash.MatchString(solarian) { //match by mint number or mint hash
+				resp, err := http.Get("http://dev1.solarians.click:8883/api/mints")
 				if err != nil {
-					log.Fatalf("solarian: %v", err)
+					log.Fatalf("request: %w", err)
 				}
-			} else if rMintHash.MatchString(solarian) {
+				byteResp, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					log.Fatalf("ReadAll: %w", err)
+				}
+				mintInfo := []struct {
+					Mint  string
+					Parts []struct {
+						Type      string
+						Variation string
+						Rarity    decimal.Decimal
+					}
+					TextAttributes []struct {
+						Type      string
+						Variation string
+						Rarity    decimal.Decimal
+					}
+				}{}
+				err = json.Unmarshal(byteResp, &mintInfo)
+				if err != nil {
+					log.Fatalf("Unmarshal: %w", err)
+				}
+
+				itemIndex := 99999
+				for index, v := range mintInfo {
+					if v.Mint == solarian || strings.Split(v.TextAttributes[0].Variation, "#")[1] == solarian {
+						itemIndex = index
+						break
+					}
+				}
+				if itemIndex == 99999 {
+					_, err := ctx.Session.ChannelMessageSendReply(ctx.Event.ChannelID, "Could not find solarian match", ctx.Event.Reference())
+					if err != nil {
+						log.Fatalf("solarian: %v", err)
+					}
+					return
+				}
 				embed := &discordgo.MessageEmbed{
-					Type: discordgo.EmbedTypeGifv,
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "SCENE",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[0].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[0].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "LEGS",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[2].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[2].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "HANDS",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[3].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[3].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "TORSO",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[4].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[4].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "ANTENNA",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[5].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[5].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "HEAD",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[6].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[6].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "EYES",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[7].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[7].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "MOUTH",
+							Value:  "-->",
+							Inline: true,
+						},
+						{
+							Name:   "Name",
+							Value:  mintInfo[itemIndex].Parts[8].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "Rarity",
+							Value:  mintInfo[itemIndex].Parts[8].Rarity.String() + "%",
+							Inline: true,
+						},
+					},
+					Title: fmt.Sprintf(`Solarian %v`, mintInfo[itemIndex].TextAttributes[0].Variation),
+					Type:  discordgo.EmbedTypeGifv,
 					Image: &discordgo.MessageEmbedImage{
-						URL: "http://dev1.solarians.click:8883/render/" + solarian + ".gif",
+						URL: "http://dev1.solarians.click:8883/render/" + mintInfo[itemIndex].Mint + ".gif",
 					},
 				}
-				err := ctx.RespondTextEmbed("Here is solarian mint: "+solarian, embed)
+				_, err = ctx.Session.ChannelMessageSendComplex(ctx.Event.ChannelID, &discordgo.MessageSend{
+					Embed:     embed,
+					Reference: ctx.Event.Reference(),
+				})
 				if err != nil {
 					log.Fatalf("solarian: %v", err)
 				}
 			} else {
-				err := ctx.RespondText("That's not a valid mint hash or mint number")
+				_, err := ctx.Session.ChannelMessageSendReply(ctx.Event.ChannelID, "That is not a valid mint number or mint hash", ctx.Event.Reference())
 				if err != nil {
 					log.Fatalf("solarian: %v", err)
 				}
