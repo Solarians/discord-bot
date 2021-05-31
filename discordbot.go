@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"syscall"
 
 	"fmt"
@@ -14,6 +15,11 @@ import (
 
 const (
 	token = "ODQ4ODAxMzYzMzY5Nzg3NDQ0.YLR53g.mdfjzO1DyFow8d5D_uDdP8rcomQ"
+)
+
+var (
+	rMintNumber *regexp.Regexp
+	rMintHash   *regexp.Regexp
 )
 
 func startBot() (*discordgo.Session, error) {
@@ -27,6 +33,8 @@ func startBot() (*discordgo.Session, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error connecting: %v", err)
 	}
+	rMintNumber = regexp.MustCompile(`^([1-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|10000)$`)
+	rMintHash = regexp.MustCompile(`^\w{44}$`)
 	log.Println("!-BOT STARTED-!")
 	return s, nil
 }
@@ -53,19 +61,24 @@ func registerCommands(r *dgc.Router) {
 		IgnoreCase:  true,
 		Handler: func(ctx *dgc.Ctx) {
 			solarian := ctx.Arguments.Get(0).Raw()
-			if len(solarian) == 1 {
+			if rMintNumber.MatchString(solarian) { //match by mint number
 				err := ctx.RespondText("You requested solarian " + solarian)
 				if err != nil {
 					log.Fatalf("solarian: %v", err)
 				}
-			} else if len(solarian) > 1 {
+			} else if rMintHash.MatchString(solarian) {
 				embed := &discordgo.MessageEmbed{
 					Type: discordgo.EmbedTypeGifv,
 					Image: &discordgo.MessageEmbedImage{
-						URL: "https://solarians.click/render/" + solarian + ".gif",
+						URL: "http://dev1.solarians.click:8883/render/" + solarian + ".gif",
 					},
 				}
 				err := ctx.RespondTextEmbed("Here is solarian mint: "+solarian, embed)
+				if err != nil {
+					log.Fatalf("solarian: %v", err)
+				}
+			} else {
+				err := ctx.RespondText("That's not a valid mint hash or mint number")
 				if err != nil {
 					log.Fatalf("solarian: %v", err)
 				}
