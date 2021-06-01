@@ -110,130 +110,71 @@ func registerCommands(r *dgc.Router) {
 				embed := &discordgo.MessageEmbed{
 					Fields: []*discordgo.MessageEmbedField{
 						{
+							Name:   "NAME",
+							Value:  mintInfo[itemIndex].TextAttributes[1].Variation,
+							Inline: true,
+						},
+						{
+							Name:   "TITLE",
+							Value:  mintInfo[itemIndex].TextAttributes[2].Variation + " | " + mintInfo[itemIndex].TextAttributes[2].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "LEVEL",
+							Value:  mintInfo[itemIndex].TextAttributes[3].Variation + " | " + mintInfo[itemIndex].TextAttributes[3].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
+							Name:   "LUCK",
+							Value:  mintInfo[itemIndex].TextAttributes[4].Variation + " | " + mintInfo[itemIndex].TextAttributes[4].Rarity.String() + "%",
+							Inline: true,
+						},
+						{
 							Name:   "SCENE",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[0].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[0].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[0].Variation + " | " + mintInfo[itemIndex].Parts[0].Rarity.String() + "%",
 							Inline: true,
 						},
 						{
 							Name:   "LEGS",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[2].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[2].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[2].Variation + " | " + mintInfo[itemIndex].Parts[2].Rarity.String() + "%",
 							Inline: true,
 						},
 						{
 							Name:   "HANDS",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[3].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[3].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[3].Variation + " | " + mintInfo[itemIndex].Parts[3].Rarity.String() + "%",
 							Inline: true,
 						},
 						{
 							Name:   "TORSO",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[4].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[4].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[4].Variation + " | " + mintInfo[itemIndex].Parts[4].Rarity.String() + "%",
 							Inline: true,
 						},
 						{
 							Name:   "ANTENNA",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[5].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[5].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[5].Variation + " | " + mintInfo[itemIndex].Parts[5].Rarity.String() + "%",
 							Inline: true,
 						},
 						{
 							Name:   "HEAD",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[6].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[6].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[6].Variation + " | " + mintInfo[itemIndex].Parts[6].Rarity.String() + "%",
 							Inline: true,
 						},
 						{
 							Name:   "EYES",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[7].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[7].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[7].Variation + " | " + mintInfo[itemIndex].Parts[7].Rarity.String() + "%",
 							Inline: true,
 						},
 						{
 							Name:   "MOUTH",
-							Value:  "-->",
-							Inline: true,
-						},
-						{
-							Name:   "Name",
-							Value:  mintInfo[itemIndex].Parts[8].Variation,
-							Inline: true,
-						},
-						{
-							Name:   "Rarity",
-							Value:  mintInfo[itemIndex].Parts[8].Rarity.String() + "%",
+							Value:  mintInfo[itemIndex].Parts[8].Variation + " | " + mintInfo[itemIndex].Parts[8].Rarity.String() + "%",
 							Inline: true,
 						},
 					},
 					Title: fmt.Sprintf(`Solarian %v`, mintInfo[itemIndex].TextAttributes[0].Variation),
 					Type:  discordgo.EmbedTypeGifv,
 					Image: &discordgo.MessageEmbedImage{
-						URL: "http://dev1.solarians.click:8883/render/" + mintInfo[itemIndex].Mint + ".gif",
+						URL:   "http://dev1.solarians.click:8883/render/" + mintInfo[itemIndex].Mint + ".gif",
+						Width: 1000,
 					},
 				}
 				_, err = ctx.Session.ChannelMessageSendComplex(ctx.Event.ChannelID, &discordgo.MessageSend{
