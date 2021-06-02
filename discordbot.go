@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	token = "ODQ4ODAxMzYzMzY5Nzg3NDQ0.YLR53g.mdfjzO1DyFow8d5D_uDdP8rcomQ"
+	token = "###"
 )
 
 var (
