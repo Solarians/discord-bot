@@ -18,25 +18,49 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-const (
-	token = "###"
-)
+type Config struct {
+	Token string
+}
 
 var (
 	rMintNumber *regexp.Regexp
 	rMintHash   *regexp.Regexp
 )
 
-func startBot() (*discordgo.Session, error) {
-	log.Println("!-STARTING BOT-!")
-	s, err := discordgo.New("Bot " + token)
+func loadConfiguration(file string) (Config, error) {
+	var config Config
+
+	configFile, err := os.Open(file)
 	if err != nil {
-		return nil, fmt.Errorf("Invalid bot parameters: %v", err)
+		return Config{}, fmt.Errorf("open: %w", err)
 	}
 
+	defer configFile.Close()
+	if err != nil {
+		return Config{}, fmt.Errorf("close: %w", err)
+	}
+
+	jsonParser := json.NewDecoder(configFile)
+	err = jsonParser.Decode(&config)
+	if err != nil {
+		return Config{}, fmt.Errorf("decode: %w", err)
+	}
+	return config, nil
+}
+
+func startBot(configFile string) (*discordgo.Session, error) {
+	log.Println("!-STARTING BOT-!")
+	config, err := loadConfiguration(configFile)
+	if err != nil {
+		return nil, fmt.Errorf("invalid bot parameters: %v", err)
+	}
+	s, err := discordgo.New("Bot " + config.Token)
+	if err != nil {
+		return nil, fmt.Errorf("invalid bot parameters: %v", err)
+	}
 	err = s.Open()
 	if err != nil {
-		return nil, fmt.Errorf("Error connecting: %v", err)
+		return nil, fmt.Errorf("error connecting: %v", err)
 	}
 	rMintNumber = regexp.MustCompile(`^([1-9]|[1-9][0-9]|[1-9][0-9][0-9]|[1-9][0-9][0-9][0-9]|10000)$`)
 	rMintHash = regexp.MustCompile(`^\w{44}$`)
@@ -195,7 +219,7 @@ func registerCommands(r *dgc.Router) {
 }
 
 func main() {
-	session, err := startBot()
+	session, err := startBot("config.json")
 	if err != nil {
 		panic(err)
 	}
