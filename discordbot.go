@@ -18,17 +18,29 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+type Giphy struct {
+	Data struct {
+		Images struct {
+			Original struct {
+				URL string `json:"url"`
+			} `json:"original"`
+		} `json:"images"`
+	} `json:"data"`
+}
+
 type Config struct {
-	Token string
+	Token       string `json:"token"`
+	GiphyAPIKey string `json:"giphyAPIKey"`
 }
 
 var (
 	rMintNumber *regexp.Regexp
 	rMintHash   *regexp.Regexp
+	config      Config
 )
 
 func loadConfiguration(file string) (Config, error) {
-	var config Config
+	var c Config
 
 	configFile, err := os.Open(file)
 	if err != nil {
@@ -41,19 +53,21 @@ func loadConfiguration(file string) (Config, error) {
 	}
 
 	jsonParser := json.NewDecoder(configFile)
-	err = jsonParser.Decode(&config)
+	err = jsonParser.Decode(&c)
 	if err != nil {
 		return Config{}, fmt.Errorf("decode: %w", err)
 	}
-	return config, nil
+	return c, nil
 }
 
 func startBot(configFile string) (*discordgo.Session, error) {
 	log.Println("!-STARTING BOT-!")
-	config, err := loadConfiguration(configFile)
+	c, err := loadConfiguration(configFile)
 	if err != nil {
 		return nil, fmt.Errorf("invalid bot parameters: %v", err)
 	}
+	config = c
+	log.Println(config.GiphyAPIKey)
 	s, err := discordgo.New("Bot " + config.Token)
 	if err != nil {
 		return nil, fmt.Errorf("invalid bot parameters: %v", err)
@@ -78,7 +92,35 @@ func registerCommands(r *dgc.Router) {
 		Handler: func(ctx *dgc.Ctx) {
 			err := ctx.RespondText("Hello there!")
 			if err != nil {
-				log.Fatalf("hello: %v", err)
+				log.Fatalf("RespondText: %v", err)
+			}
+		},
+	})
+	r.RegisterCmd(&dgc.Command{
+		Name:        "robot",
+		Description: "Random robot gif",
+		Usage:       "robot",
+		Example:     "robot fail",
+		IgnoreCase:  true,
+		Handler: func(ctx *dgc.Ctx) {
+			reqUrl := fmt.Sprintf("https://api.giphy.com/v1/gifs/random?api_key=%s&tag=robot&rating=g", config.GiphyAPIKey)
+			resp, err := http.Get(reqUrl)
+			if err != nil {
+				log.Fatalf("Get: %w", err)
+			}
+			respByte, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatalf("ReadAll: %w", err)
+			}
+			log.Println(string(respByte))
+			var gif Giphy
+			err = json.Unmarshal(respByte, &gif)
+			if err != nil {
+				log.Fatalf("Unmarshal: %w", err)
+			}
+			err = ctx.RespondText(gif.Data.Images.Original.URL)
+			if err != nil {
+				log.Fatalf("RespondText: %w", err)
 			}
 		},
 	})
